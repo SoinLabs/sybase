@@ -12,7 +12,7 @@ const sybaseCredentials = {
 };
 
 describe("Node Sybase Bridge", function () {
-  describe("Synchronous", () => {
+  describe("Asynchronous", () => {
     let sybase;
     let connectError;
 
@@ -37,7 +37,7 @@ describe("Node Sybase Bridge", function () {
     });
   });
 
-  describe("Asynchronous", () => {
+  describe("Synchronous", () => {
     let sybase;
 
     let connectError;
