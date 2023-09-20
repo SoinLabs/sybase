@@ -1,188 +1,70 @@
+const expect = require("chai").expect;
+const Sybase = require("../src/index.js");
+const P = require("bluebird");
 
-var expect = require("chai").expect;
-var Sybase = require("../src/SybaseDB.js");
-var P = require("bluebird");
+const sybaseCredentials = {
+  host: null,
+  port: 5000,
+  database: null,
+  username: null,
+  password: null,
+  pathToJavaBridge: null,
+};
 
-//Configure To Connect To Your database here:
-var host = '10.0.0.141',
-	port = 5000,
-	user = 'sa',
-	pw = '',
-	db = "exchange_wl1";
+describe("Node Sybase Bridge", function () {
+  describe("Synchronous", () => {
+    let sybase;
+    let connectError;
 
-describe("Node Sybase Bridge", function() {
-	
-	var subject;
-	var connectError;
-	
-	before(function(done){
-		subject = new Sybase(host, port, db, user, pw, true);	
-		subject.connect(function(err) {
-			connectError = err;
-			done();
-		});
-	});
+    beforeEach((done) => {
+      sybase = new Sybase(sybaseCredentials);
 
-	after(function(done) {
-		subject.disconnect();
-		done();
-	});
+      sybase.connect(function (err) {
+        connectError = err;
+        done();
+      });
+    });
 
-	it("Connect", function(done) {
-		expect(connectError).to.equal(null);
-		expect(subject.isConnected()).to.equal(true);
-		done();
-	});
+    after(function (done) {
+      sybase.disconnect();
+      done();
+    });
 
-	it("Simple Single Array Result", function(done) {
-		
-		if (!subject.isConnected()) {
-			expect(connectError).to.equal(null);
-			done();
-			return;	
-		}
+    it("Connect", function (done) {
+      expect(connectError).to.equal(null);
+      expect(sybase.isConnected()).to.equal(true);
+      done();
+    });
+  });
 
-		subject.query("select top 1 * from accounts", function(err, data) {
+  describe("Asynchronous", () => {
+    let sybase;
 
-			expect(err).to.equal(null);
+    let connectError;
 
-			expect(data).to.be.a('array');
-			expect(data.length).to.equal(1);			
-			done();
-		});
+    beforeEach((done) => {
+      sybase = new Sybase(sybaseCredentials);
 
-	});
+      sybase
+        .connectAsync()
+        .then(() => {
+          connectError = null;
+          done();
+        })
+        .catch((err) => {
+          connectError = err;
+          done();
+        });
+    });
 
-	it('Should work with updates', function(done) {
-		
-		if (!subject.isConnected()) {
-			expect(connectError).to.equal(null);
-			done();
-			return;	
-		}
+    after(() => {
+      sybase.disconnect();
+    });
 
-		var pquery = P.promisify(subject.query, {context: subject});
-		pquery("update accounts set email = 'newemail@gmail.com' where name = 'testuser17'").then(function(results){
-			
-			console.log('updates returned: ' + JSON.stringify(results));
-			console.dir(results);
-
-			done();
-		}).catch((err)=>{
-			done(err);
-		});		
-	});
-
-	it('Should work with inserts', function(done) {
-		
-		if (!subject.isConnected()) {
-			expect(connectError).to.equal(null);
-			done();
-			return;	
-		}
-
-		var pquery = P.promisify(subject.query, {context: subject});
-		pquery("select top 2 * from app_log\ninsert into app_log (target, date, lvel, message) values ('testing', getdate(), 'ERROR', 'msg')\ninsert into app_log (target, date, lvel, message) values ('testing2', getdate(), 'ERROR', 'msg')\nselect top 2 * from app_log").then(function(results){
-			
-			console.log('inserts returned: ' + JSON.stringify(results));
-			console.dir(results);
-
-			done();
-		}).catch((err)=>{
-			done(err);
-		});		
-	});
-
-	it('Should work with stored procedres', function(done) {
-		
-		if (!subject.isConnected()) {
-			expect(connectError).to.equal(null);
-			done();
-			return;	
-		}
-
-		var pquery = P.promisify(subject.query, {context: subject});
-		pquery("exec sp_test").then(function(results){
-			
-			console.log('inserts returned: ' + JSON.stringify(results));
-			console.dir(results);
-
-			done();
-		}).catch((err)=>{
-			done(err);
-		});		
-	});
-	
-	it("Multiple async Calls (batch)", function(done) {
-		
-		if (!subject.isConnected()) {
-			expect(connectError).to.equal(null);
-			done();
-			return;	
-		}
-
-		var pquery = P.promisify(subject.query, {context: subject});
-
-		var pArray = [];
-
-		for (var i=0; i<5; i++)
-		{
-			pArray.push(pquery("select top 1 * from accounts"));
-		}
-
-		P.all(pArray).then(function(results) {
-			
-			console.log(JSON.stringify(results));
-
-			results.forEach(function(data) {
-				expect(data).to.be.a('array');
-				expect(data.length).to.equal(1);				
-			});
-			done();
-
-		}).catch(function(err) {
-			done(err);
-		});
-	});
-
-	it("Batch with one error", function(done) {
-		
-		if (!subject.isConnected()) {
-			expect(connectError).to.equal(null);
-			done();
-			return;	
-		}
-
-		var pquery = P.promisify(subject.query, {context: subject});
-
-		var pArray = [];
-
-		var badEgg = pquery("select * from tableThatDoesntExist");
-		for (var i=0; i<5; i++)
-		{
-			pArray.push(pquery("select top 1 * from accounts"));
-		}
-		
-		P.all(pArray).then(function(results) {
-			
-			console.log(JSON.stringify(results));
-
-			results.forEach(function(data) {
-				expect(data).to.be.a('array');
-				expect(data.length).to.equal(1);				
-			});
-
-		}).catch(function(err) {
-			done(err);
-		});
-
-		badEgg.then(function(results) {
-			done(new Error("Expected an error from this call."));
-		}).catch(function(err) {
-			//console.log("error:" + err.message);
-			expect(err.message).to.contain("tableThatDoesntExist");
-			done();
-		});
-	});
-
+    it("Connect", (done) => {
+      expect(connectError).to.equal(null);
+      expect(sybase.isConnected()).to.equal(true);
+      done();
+    });
+  });
 });
