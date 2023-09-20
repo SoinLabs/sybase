@@ -1,74 +1,95 @@
-node-sybase
----------
+# Sybase Node.js Bridge
 
-A simple node.js wrapper around a Java application that provides easy access to Sybase databases via jconn3. The main goal is to allow easy installation without the requirements of installing and configuring odbc or freetds. You do however have to have java 1.5 or newer installed.
+## Overview
 
-requirements
+This library provides a Node.js bridge to connect to a Sybase database. It uses a Java bridge to facilitate the connection and query execution.
+
+## Installation
+
+```bash
+npm install sybjet
+```
+
+Requirements
 ------------
 
 * java 1.5+
 
-install
--------
+## Usage
 
-### git
-
-```bash
-git clone git://github.com/rodhoward/node-sybase.git
-cd node-sybase
-node-gyp configure build
-```
-### npm
-
-```bash
-npm install sybase
-```
-
-quick example
--------------
+### Importing the Library
 
 ```javascript
-var Sybase = require('sybase'),
-	db = new Sybase('host', port, 'dbName', 'username', 'pw');
+const Sybase = require('sybjet');
+```
 
-db.connect(function (err) {
-  if (err) return console.log(err);
-  
-  db.query('select * from user where user_id = 42', function (err, data) {
-    if (err) console.log(err);
-    
-    console.log(data);
+### Creating a Sybase Instance
 
-    db.disconnect();
-
-  });
+```javascript
+const sybase = new Sybase({
+  host: 'localhost',
+  port: 5000,
+  database: 'sybase',
+  username: 'username',
+  password: 'password',
+  logTiming: true,
+  pathToJavaBridge: '/path/to/JavaSybaseLink.jar',
+  encoding: 'utf8',
+  logs: true
 });
 ```
 
-api
--------------
+### Connecting to the Database
 
-The api is super simple. It makes use of standard node callbacks so that it can be easily used with promises. here is the full list of arguments:
+#### Asynchronous Connection
 
-```
-new Sybase(host: string, port: int, dbName: string, username: string, password: string, logTiming?: boolean, javaJarPath?: string, options?: SybaseOptions)
-```
-Where the SybaseOptions interface includes:
-```
-SybaseOptions {
-  encoding: string, // defaults to "utf8"
-  extraLogs: boolean // defaults to false
-}
+```javascript
+sybase.connect((err, data) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log('Connected:', data);
+});
 ```
 
-There is an example manually setting the java jar path:
-```javascript 
-var logTiming = true,
-	javaJarPath = './JavaSybaseLink/dist/JavaSybaseLink.jar',
-	db = new Sybase('host', port, 'dbName', 'username', 'pw', logTiming, javaJarPath);
+#### Synchronous Connection
+
+```javascript
+const data = await sybase.connectAsync();
+console.log('Connected:', data);
 ```
 
-The java Bridge now optionally looks for a "sybaseConfig.properties" file in which you can configure jconnect properties to be included in the connection. This should allow setting properties like:
-```properties
-ENCRYPT_PASSWORD=true
+### Executing Queries
+
+#### Asynchronous Query
+
+```javascript
+sybase.query('SELECT * FROM users', (err, result) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log('Result:', result);
+});
+```
+
+#### Synchronous Query
+
+```javascript
+const result = await sybase.querySync('SELECT * FROM users');
+console.log('Result:', result);
+```
+
+### Disconnecting
+
+```javascript
+sybase.disconnect();
+```
+
+### Checking Connection Status
+
+```javascript
+const isConnected = sybase.isConnected();
+console.log(`Is connected: ${isConnected}`);
 ```
