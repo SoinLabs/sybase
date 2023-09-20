@@ -41,7 +41,7 @@ const sybase = new Sybase({
 
 ### Connecting to the Database
 
-#### Asynchronous Connection
+### `connect()`
 
 ```javascript
 sybase.connect((err, data) => {
@@ -53,7 +53,7 @@ sybase.connect((err, data) => {
 });
 ```
 
-#### Synchronous Connection
+### `connectAsync()`
 
 ```javascript
 const data = await sybase.connectAsync();
@@ -62,7 +62,7 @@ console.log('Connected:', data);
 
 ### Executing Queries
 
-#### Asynchronous Query
+### `query(sqlQuery)`
 
 ```javascript
 sybase.query('SELECT * FROM users', (err, result) => {
@@ -74,22 +74,44 @@ sybase.query('SELECT * FROM users', (err, result) => {
 });
 ```
 
-#### Synchronous Query
+### `querySync(sqlQuery)`
 
 ```javascript
 const result = await sybase.querySync('SELECT * FROM users');
 console.log('Result:', result);
 ```
 
-### Disconnecting
+### `disconnect()`
 
 ```javascript
 sybase.disconnect();
 ```
 
-### Checking Connection Status
+### `isConnected()`
 
 ```javascript
 const isConnected = sybase.isConnected();
 console.log(`Is connected: ${isConnected}`);
 ```
+
+### `transaction(queriesFunction)`
+
+Executes a series of queries within a transaction. If any of the queries fail, the transaction will be rolled back.
+
+#### Example
+
+```javascript
+async function main() {
+  try {
+    const result = await sybase.transaction(async (connection) => {
+      const user = await connection.querySync('SELECT * FROM users WHERE id = 1');
+      await connection.querySync(`UPDATE users SET name = 'John' WHERE id = 1`);
+      return user;
+    });
+    console.log('Transaction successful, result:', result);
+  } catch (err) {
+    console.error('Transaction failed:', err);
+  }
+}
+
+main();

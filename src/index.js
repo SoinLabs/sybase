@@ -111,29 +111,44 @@ function Sybase({
     });
   }.bind(this);
 
-  const connectCore = function(callback) {
-    this.javaDB = spawn('java', ['-jar', this.pathToJavaBridge, this.host, this.port, this.database, this.username, this.password]);
-  
-    this.javaDB.stdout.once('data', (data) => {
-      const dataStr = data.toString().trim();  // Convert Buffer to string and trim it
-      if (dataStr !== 'connected') {
+  const connectCore = function (callback) {
+    this.javaDB = spawn("java", [
+      "-jar",
+      this.pathToJavaBridge,
+      this.host,
+      this.port,
+      this.database,
+      this.username,
+      this.password,
+    ]);
+
+    this.javaDB.stdout.once("data", (data) => {
+      const dataStr = data.toString().trim(); // Convert Buffer to string and trim it
+      if (dataStr !== "connected") {
         callback(new Error(`Error connecting ${dataStr}`), null);
         return;
       }
-  
-      this.javaDB.stderr.removeAllListeners('data');
+
+      this.javaDB.stderr.removeAllListeners("data");
       this.connected = true;
-  
-      this.javaDB.stdout.setEncoding(this.encoding).pipe(this.jsonParser).on('data', (jsonMsg) => { onSQLResponse(jsonMsg); });
-      this.javaDB.stderr.on('data', (err) => { onSQLError(err); });
-  
+
+      this.javaDB.stdout
+        .setEncoding(this.encoding)
+        .pipe(this.jsonParser)
+        .on("data", (jsonMsg) => {
+          onSQLResponse(jsonMsg);
+        });
+      this.javaDB.stderr.on("data", (err) => {
+        onSQLError(err);
+      });
+
       callback(null, dataStr);
     });
-  
-    this.javaDB.stderr.once('data', (data) => {
-      this.javaDB.stdout.removeAllListeners('data');
+
+    this.javaDB.stderr.once("data", (data) => {
+      this.javaDB.stdout.removeAllListeners("data");
       this.javaDB.kill();
-      callback(new Error(data.toString()), null);  // Convert Buffer to string
+      callback(new Error(data.toString()), null); // Convert Buffer to string
     });
   }.bind(this);
 
@@ -242,6 +257,53 @@ function Sybase({
       this.javaDB.stdin.write(strMsg + "\n");
       this.log(`SQL request written: ${strMsg}`);
     });
+  };
+
+  /**
+   * Executes a series of queries within a transaction.
+   *
+   * @async
+   * @param {Function} queriesFunction - A function that takes the Sybase connection as an argument and returns a Promise.
+   * @returns {Promise<any>} - Returns a Promise that resolves with the result of the queries or rejects with an error.
+   *
+   * @example
+   * async function main() {
+   *   try {
+   *     const result = await sybase.transaction(async (connection) => {
+   *       const user = await connection.querySync('SELECT * FROM users WHERE id = 1');
+   *       await connection.querySync(`UPDATE users SET name = 'John' WHERE id = 1`);
+   *       return user;
+   *     });
+   *     console.log('Transaction successful, result:', result);
+   *   } catch (err) {
+   *     console.error('Transaction failed:', err);
+   *   }
+   * }
+   *
+   * main();
+   */
+  this.transaction = async function (queriesFunction) {
+    let result;
+    let error;
+
+    try {
+      await this.querySync("BEGIN TRANSACTION");
+
+      result = await queriesFunction(this);
+
+      await this.querySync("COMMIT TRANSACTION");
+    } catch (err) {
+      error = err;
+      await this.querySync("ROLLBACK TRANSACTION");
+    } finally {
+      this.disconnect();
+    }
+
+    if (error) {
+      throw error;
+    }
+
+    return result;
   };
 
   /**
