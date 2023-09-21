@@ -87,6 +87,15 @@ console.log('Result:', result);
 sybase.disconnect();
 ```
 
+### `disconnectSync()`
+
+The `disconnectSync` method allows you to disconnect synchronously from the database and terminates the associated Java process
+
+```javascript
+const sybase = new Sybase(...);
+await sybase.disconnectSync();
+```
+
 ### `isConnected()`
 
 ```javascript

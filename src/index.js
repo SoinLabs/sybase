@@ -330,7 +330,7 @@ function Sybase({
   };
 
   /**
-   * Disconnects from the database and kills the Java process.
+   * Disconnects synchronously from the database and kills the Java process.
    *
    * @example
    * const sybase = new Sybase(...);
