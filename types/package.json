@@ -1,0 +1,6 @@
+{
+ "dependencies": {
+    "@types/node": "^16",
+    "JSONStream": "latest"
+  }
+}
