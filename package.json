@@ -1,7 +1,7 @@
 {
-  "name": "sybase",
-  "version": "1.2.3",
-  "description": "A simple node.js wrapper around a java/jconnect app that provides easy access to Sybase Databases without having to install odbc or freetds.",
+  "name": "sybjet",
+  "version": "0.0.1",
+  "description": "This library provides a Node.js bridge to connect to a Sybase database. It uses a Java bridge to facilitate the connection and query execution.",
   "dependencies": {
     "JSONStream": "latest"
   },
@@ -9,10 +9,10 @@
   "scripts": {
     "test": "mocha"
   },
-  "homepage": "http://github.com/rodhoward/node-sybase/",
+  "homepage": "http://github.com/vhrechukha/sybjet",
   "repository": {
     "type": "git",
-    "url": "git://github.com/rodhoward/node-sybase.git"
+    "url": "git://github.com/vhrechukha/sybjet.git"
   },
   "license": "MIT",
   "keywords": [
@@ -22,9 +22,9 @@
     "sql",
     "java"
   ],
-  "author": "Rod Howard <rod.howard@gmail.com>",
+  "author": "Viktoriia Hrechukha <viktoriia.hrechukha@gmail.com>",
   "bugs": {
-    "url": "https://github.com/rodhoward/node-sybase/issues"
+    "url": "http://github.com/vhrechukha/sybjet/issues"
   },
   "devDependencies": {
     "bluebird": "^3.4.6",
