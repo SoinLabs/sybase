@@ -84,7 +84,10 @@ function Sybase({
       );
     }
 
-    request.callback(err, result);
+    // Check if request.callback is a function before invoking it
+    if (typeof request.callback === "function") {
+      request.callback(err, result);
+    }
   }.bind(this);
 
   /**
@@ -122,34 +125,47 @@ function Sybase({
       this.password,
     ]);
 
-    this.javaDB.stdout.once("data", (data) => {
-      const dataStr = data.toString().trim(); // Convert Buffer to string and trim it
-      if (dataStr !== "connected") {
-        callback(new Error(`Error connecting ${dataStr}`), null);
-        return;
-      }
+    const handleConnection = (resolve, reject) => {
+      this.javaDB.stdout.once("data", (data) => {
+        const dataStr = data.toString().trim();
+        if (dataStr !== "connected") {
+          const error = new Error(`Error connecting ${dataStr}`);
+          if (callback) callback(error, null);
+          else reject(error);
+          return;
+        }
 
-      this.javaDB.stderr.removeAllListeners("data");
-      this.connected = true;
+        this.javaDB.stderr.removeAllListeners("data");
+        this.connected = true;
 
-      this.javaDB.stdout
-        .setEncoding(this.encoding)
-        .pipe(this.jsonParser)
-        .on("data", (jsonMsg) => {
-          onSQLResponse(jsonMsg);
+        this.javaDB.stdout
+          .setEncoding(this.encoding)
+          .pipe(this.jsonParser)
+          .on("data", (jsonMsg) => {
+            onSQLResponse(jsonMsg);
+          });
+        this.javaDB.stderr.on("data", (err) => {
+          onSQLError(err);
         });
-      this.javaDB.stderr.on("data", (err) => {
-        onSQLError(err);
+
+        if (callback) callback(null, dataStr);
+        else resolve(dataStr);
       });
 
-      callback(null, dataStr);
-    });
+      this.javaDB.stderr.once("data", (data) => {
+        this.javaDB.stdout.removeAllListeners("data");
+        this.javaDB.kill();
+        const error = new Error(data.toString());
+        if (callback) callback(error, null);
+        else reject(error);
+      });
+    };
 
-    this.javaDB.stderr.once("data", (data) => {
-      this.javaDB.stdout.removeAllListeners("data");
-      this.javaDB.kill();
-      callback(new Error(data.toString()), null); // Convert Buffer to string
-    });
+    if (callback) {
+      handleConnection(null, null);
+    } else {
+      return new Promise(handleConnection);
+    }
   }.bind(this);
 
   this.connect = function (callback) {
@@ -157,15 +173,7 @@ function Sybase({
   };
 
   this.connectAsync = function () {
-    return new Promise((resolve, reject) => {
-      connectCore((err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      });
-    });
+    return connectCore();
   };
 
   const prepareQuery = function (sql, callback) {
@@ -239,6 +247,7 @@ function Sybase({
   this.querySync = function (sql) {
     return new Promise((resolve, reject) => {
       const strMsg = prepareQuery(sql, null);
+
       if (strMsg === null) {
         reject(new Error("Database isn't connected."));
         return;
@@ -254,8 +263,12 @@ function Sybase({
 
       this.jsonParser.on("data", onResponse);
 
-      this.javaDB.stdin.write(strMsg + "\n");
-      this.log(`SQL request written: ${strMsg}`);
+      try {
+        this.javaDB.stdin.write(strMsg + "\n");
+        this.log(`SQL request written: ${strMsg}`);
+      } catch (err) {
+        reject(err); // Reject if writing to stdin fails
+      }
     });
   };
 
@@ -295,8 +308,6 @@ function Sybase({
     } catch (err) {
       error = err;
       await this.querySync("ROLLBACK TRANSACTION");
-    } finally {
-      this.disconnect();
     }
 
     if (error) {
@@ -316,6 +327,37 @@ function Sybase({
   this.disconnect = function () {
     this.javaDB.kill();
     this.connected = false;
+  };
+
+  /**
+   * Disconnects from the database and kills the Java process.
+   *
+   * @example
+   * const sybase = new Sybase(...);
+   * await sybase.disconnectSync();
+   */
+  this.disconnectSync = function () {
+    return new Promise((resolve, reject) => {
+      if (!this.connected) {
+        resolve(); // Resolve immediately if not connected
+        return;
+      }
+
+      this.javaDB.on("exit", (code) => {
+        this.connected = false;
+        if (code !== null && code !== 0 && code !== 143) {
+          reject(new Error(`Java process exited with code ${code}`));
+        } else {
+          resolve();
+        }
+      });
+
+      this.javaDB.on("error", (err) => {
+        reject(err); // Reject on error
+      });
+
+      this.javaDB.kill(); // Attempt to kill the Java process
+    });
   };
 
   /**
