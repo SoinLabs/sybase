@@ -1,11 +1,13 @@
 {
   "name": "sybjet",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "This library provides a Node.js bridge to connect to a Sybase database. It uses a Java bridge to facilitate the connection and query execution.",
   "dependencies": {
     "JSONStream": "latest"
   },
   "main": "src/index.js",
+  "types": "types/index.d.ts",
+  "typings": "types/index.d.ts",
   "scripts": {
     "test": "mocha"
   },
