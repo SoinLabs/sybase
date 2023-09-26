@@ -1,4 +1,4 @@
-declare module "sybase" {
+declare module "sybjet" {
   /**
    * Interface for the options to be passed to the Sybase constructor.
    */
