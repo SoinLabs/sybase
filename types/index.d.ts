@@ -8,7 +8,7 @@ declare module "sybjet" {
     database: string;
     username: string;
     password: string;
-    logTiming?: boolean;
+    logTiming?: boolean | number;
     pathToJavaBridge?: string;
     encoding?: string;
     logs?: boolean;
