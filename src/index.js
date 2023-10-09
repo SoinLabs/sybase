@@ -318,6 +318,39 @@ function Sybase({
   };
 
   /**
+   * Retrieves the version of the Sybase database.
+   *
+   * @returns {Promise<string>} A promise that resolves with the version of the Sybase database.
+   * @throws {Error} Throws an error if the process fails or if not connected.
+   *
+   * @example
+   * const sybase = new Sybase(...);
+   * try {
+   *   const version = await sybase.getVersion();
+   *   console.log(`Connected to Sybase version: ${version}`);
+   * } catch (error) {
+   *   console.error(`Error retrieving Sybase version: ${error.message}`);
+   * }
+   */
+  this.getVersion = async function () {
+    if (!this.connected) {
+      throw new Error("Not connected to the Sybase database.");
+    }
+
+    try {
+      const result = await this.querySync("SELECT @@version AS version");
+      if (result && result.length && result[0].length && result[0][0].version) {
+        return result[0][0].version;
+      }
+      throw new Error("Failed to retrieve Sybase version.");
+    } catch (error) {
+      throw new Error(
+        `Failed to retrieve Sybase version due to: ${error.message}`
+      );
+    }
+  };
+
+  /**
    * Disconnects from the database and kills the Java process.
    *
    * @example

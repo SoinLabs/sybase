@@ -72,6 +72,12 @@ declare module "sybjet" {
     ): Promise<any>;
 
     /**
+     * Retrieves the version of the Sybase database.
+     * @returns A promise that resolves with the version of the Sybase database or rejects with an error.
+     */
+    getVersion(): Promise<string>;
+
+    /**
      * Disconnects from the Sybase database and kills the Java process.
      */
     disconnect(): void;

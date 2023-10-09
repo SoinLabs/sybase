@@ -67,6 +67,13 @@ describe("Node Sybase Bridge", function () {
       done();
     });
 
+    it("Get Version", async () => {
+      const version = await sybase.getVersion();
+      expect(version).to.be.a('string');
+      expect(version.length).to.be.greaterThan(0);
+      console.log('Get Version: ', version)
+    });
+
     describe("Transaction", () => {
       it("should create a table, insert data and commit the transaction", async function () {
         expect(connectError).to.equal(null);
