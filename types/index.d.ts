@@ -52,7 +52,7 @@ declare module "sybjet" {
      */
     query(
       sql: string,
-      callback: (error: Error | null, result: QueryResult) => void
+      callback: (error: Error | null, result: QueryResult[]) => void
     ): void;
 
     /**
@@ -60,7 +60,7 @@ declare module "sybjet" {
      * @param sql - The SQL query string.
      * @returns A promise that resolves with the result of the query.
      */
-    querySync(sql: string): Promise<QueryResult>;
+    querySync(sql: string): Promise<QueryResult[]>;
 
     /**
      * Executes a series of queries within a transaction.
