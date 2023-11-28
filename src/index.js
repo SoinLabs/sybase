@@ -1,6 +1,8 @@
 const spawn = require("child_process").spawn;
-const JSONStream = require("JSONStream");
 const path = require("path");
+const { chain } = require("stream-chain");
+const { parser } = require("stream-json");
+const { streamValues } = require("stream-json/streamers/StreamValues");
 
 function Sybase({
   host,
@@ -35,9 +37,13 @@ function Sybase({
   }
 
   this.queryCount = 0;
-  this.currentMessages = { cat: 1 }; // look up msgId to message sent and call back details.
+  this.currentMessages = {}; // look up msgId to message sent and call back details.
 
-  this.jsonParser = JSONStream.parse();
+  this.jsonParser = chain([
+    parser({ jsonStreaming: true }),
+    streamValues(),
+    (data) => data.value,
+  ]);
 
   /**
    * Handles the SQL response from the database.
@@ -126,8 +132,9 @@ function Sybase({
     ]);
 
     const handleConnection = (resolve, reject) => {
+      let dataStr;
       this.javaDB.stdout.once("data", (data) => {
-        const dataStr = data.toString().trim();
+        dataStr = data.toString().trim();
         if (dataStr !== "connected") {
           const error = new Error(`Error connecting ${dataStr}`);
           if (callback) callback(error, null);
@@ -139,7 +146,7 @@ function Sybase({
         this.connected = true;
 
         this.javaDB.stdout
-          .setEncoding(this.encoding)
+          // .setEncoding(this.encoding)
           .pipe(this.jsonParser)
           .on("data", (jsonMsg) => {
             onSQLResponse(jsonMsg);

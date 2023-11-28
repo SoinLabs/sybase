@@ -1,9 +1,9 @@
 {
   "name": "sybjet",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "This library provides a Node.js bridge to connect to a Sybase database. It uses a Java bridge to facilitate the connection and query execution.",
   "dependencies": {
-    "JSONStream": "latest"
+    "stream-json": "latest"
   },
   "main": "src/index.js",
   "types": "types/index.d.ts",
@@ -31,10 +31,10 @@
   "devDependencies": {
     "bluebird": "^3.4.6",
     "chai": "^3.5.0",
-    "eslint-plugin-jest": "^27.4.0",
     "eslint": "^8.49.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jest": "^27.4.0",
     "mocha": "^3.0.2"
   }
 }
