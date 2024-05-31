@@ -21,6 +21,7 @@ public class SybaseDB {
 
 	public static final int TYPE_TIME_STAMP = 93;
 	public static final int TYPE_DATE = 91;
+	public static final int TYPE_TIME = 92;
 
 	public static final int NUMBER_OF_THREADS = 5;
 
@@ -56,12 +57,36 @@ public class SybaseDB {
 		try {
 			SybDriver sybDriver = (SybDriver) Class.forName("com.sybase.jdbc3.jdbc.SybDriver").newInstance();
 			conn = DriverManager.getConnection("jdbc:sybase:Tds:" + host + ":" + port + "/" + dbname, props);
+
+			//Atach shutdown hook to close the connection
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
+				public void run() {
+					try {
+						conn.close();
+					} catch (Exception ex) {
+						System.err.println(ex);
+						System.err.println(ex.getMessage());
+					}
+				}
+			});
+			
 			return true;
 
 		} catch (Exception ex) {
 			System.err.println(ex);
 			System.err.println(ex.getMessage());
 			return false;
+		}
+	}
+
+	public void disconnect()
+	{
+		try {
+			conn.close();
+		} catch (Exception ex) {
+			System.err.println(ex);
+			System.err.println(ex.getMessage());
 		}
 	}
 

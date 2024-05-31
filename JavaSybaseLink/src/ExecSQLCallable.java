@@ -40,18 +40,20 @@ public class ExecSQLCallable implements Callable<String> {
 		response.put("msgId", request.msgId);
 		JSONArray rss = new JSONArray();
 		response.put("result", rss);
+		Statement stmt = null;
+		ResultSet rs = null;
 
 		try {
-			Statement stmt = conn.createStatement();
+			stmt = conn.createStatement();
 			boolean isRS = stmt.execute(request.sql);
 			while (isRS || (stmt.getUpdateCount() != -1))
 			{
 				if (!isRS)
-                                {
-                                    isRS = stmt.getMoreResults();
-                                    continue;
-                                }
-				ResultSet rs = stmt.getResultSet();
+				{
+					isRS = stmt.getMoreResults();
+					continue;
+				}
+				rs = stmt.getResultSet();
 				ResultSetMetaData meta = rs.getMetaData();
 
 				// get column names;
@@ -79,6 +81,11 @@ public class ExecSQLCallable implements Callable<String> {
 								String my8601formattedDate = df.format(new Date(rs.getTimestamp(c).getTime()));
 								row.put(columns[c], my8601formattedDate);
 								break;
+							case SybaseDB.TYPE_TIME:
+								String timeFromRS = rs.getTime(c).toString();
+								String my8601formattedTime = "1970-01-01T" + timeFromRS + ".000Z";
+								row.put(columns[c], my8601formattedTime);
+								break;
 							default:
 								row.put(columns[c], rs.getObject(c));
 						}
@@ -91,6 +98,19 @@ public class ExecSQLCallable implements Callable<String> {
 			stmt.close();
 		} catch (Exception ex) {
 			response.put("error", ex.getMessage());
+		} finally {
+			try {
+				if (rs != null) rs.close();
+			} catch (Exception ex) {
+				//Ignore
+				//response.put("error", ex.getMessage());
+			}
+			try {
+				if (stmt != null) stmt.close();
+			} catch (Exception ex) {
+				//Ignore
+				//response.put("error", ex.getMessage());
+			}
 		}
 
 		response.put("javaStartTime", request.javaStartTime);

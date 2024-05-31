@@ -32,6 +32,7 @@ function Sybase({
       __dirname,
       "..",
       "JavaSybaseLink",
+      "dist",
       "JavaSybaseLink.jar"
     );
   }
