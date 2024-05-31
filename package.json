@@ -1,6 +1,6 @@
 {
-  "name": "sybjet",
-  "version": "0.0.8",
+  "name": "@soinlabs/sybase",
+  "version": "0.0.1",
   "description": "This library provides a Node.js bridge to connect to a Sybase database. It uses a Java bridge to facilitate the connection and query execution.",
   "dependencies": {
     "stream-json": "latest"
@@ -11,10 +11,10 @@
   "scripts": {
     "test": "mocha"
   },
-  "homepage": "http://github.com/vhrechukha/sybjet",
+  "homepage": "http://github.com/SoinLabs/sybase",
   "repository": {
     "type": "git",
-    "url": "git://github.com/vhrechukha/sybjet.git"
+    "url": "git://github.com/SoinLabs/sybase.git"
   },
   "license": "MIT",
   "keywords": [
@@ -24,9 +24,9 @@
     "sql",
     "java"
   ],
-  "author": "Viktoriia Hrechukha <viktoriia.hrechukha@gmail.com>",
+  "author": "SoinLabs <soinlabs@soin.co.cr>",
   "bugs": {
-    "url": "http://github.com/vhrechukha/sybjet/issues"
+    "url": "http://github.com/SoinLabs/sybase/issues"
   },
   "devDependencies": {
     "bluebird": "^3.4.6",
@@ -35,6 +35,6 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-jest": "^27.4.0",
-    "mocha": "^3.0.2"
+    "mocha": "^10.4.0"
   }
 }
