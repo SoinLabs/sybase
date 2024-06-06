@@ -1,6 +1,7 @@
 const expect = require("chai").expect;
 const Sybase = require("../src/index.js");
 const P = require("bluebird");
+const path = require("path");
 
 const sybaseCredentials = {
   host: null,
@@ -8,7 +9,7 @@ const sybaseCredentials = {
   database: null,
   username: null,
   password: null,
-  pathToJavaBridge: null,
+  pathToJavaBridge: path.resolve(__dirname, "../JavaSybaseLink/dist/JavaSybaseLink.jar"),
 };
 
 describe("Node Sybase Bridge", function () {

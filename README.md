@@ -7,7 +7,7 @@ This library provides a Node.js bridge to connect to a Sybase database. It uses 
 ## Installation
 
 ```bash
-npm install sybjet
+npm install @soinlabs/sybase
 ```
 
 Requirements
@@ -20,7 +20,7 @@ Requirements
 ### Importing the Library
 
 ```javascript
-const Sybase = require('sybjet');
+const Sybase = require('@soinlabs/sybase');
 ```
 
 ### Creating a Sybase Instance
@@ -32,10 +32,10 @@ const sybase = new Sybase({
   database: 'sybase',
   username: 'username',
   password: 'password',
-  logTiming: true,
-  pathToJavaBridge: '/path/to/JavaSybaseLink.jar',
   encoding: 'utf8',
-  logs: true
+  pathToJavaBridge: '/path/to/JavaSybaseLink.jar', // Optional
+  logTiming: true, //Logs on JAR side
+  logs: true //Logs on Node.js side
 });
 ```
 

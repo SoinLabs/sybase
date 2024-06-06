@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
-    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/1">
-        <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/src/Main.java</file>
-        <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/src/SybaseDB.java</file>
-        <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/src/MyProperties.java</file>
-        <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/src/ExecSQLCallable.java</file>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/nbproject/private/private.xml</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/nbproject/project.properties</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/nbproject/project.xml</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/src/SybaseDB.java</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/src/Main.java</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/src/ExecSQLCallable.java</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/nbproject/private/config.properties</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/nbproject/build-impl.xml</file>
+            <file>file:/Users/josequesada/Projects/sybase/JavaSybaseLink/nbproject/private/private.properties</file>
+        </group>
     </open-files>
 </project-private>

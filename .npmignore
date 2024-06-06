@@ -1,0 +1,10 @@
+test
+.github
+.vscode
+.eslintrc.json
+.DS_Store
+JavaSybaseLink
+JavaSybaseLink/*
+JavaSybaseLink/.*
+!JavaSybaseLink/dist/JavaSybaseLink.jar
+!JavaSybaseLink/dist/lib
