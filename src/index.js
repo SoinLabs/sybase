@@ -10,6 +10,13 @@ function Sybase({
   database,
   username,
   password,
+  minConnections = 1,
+  maxConnections = 1,
+  connectionTimeout = 30000,
+  idleTimeout = 60000,
+  keepaliveTime = 0,
+  maxLifetime = 1800000,
+  transactionConnections = 5,
   logTiming,
   pathToJavaBridge,
   encoding = "utf8",
@@ -21,6 +28,14 @@ function Sybase({
   this.database = database;
   this.username = username;
   this.password = password;
+  this.minConnections = minConnections;
+  this.maxConnections = maxConnections;
+  this.connectionTimeout = connectionTimeout;
+  this.idleTimeout = idleTimeout;
+  this.keepaliveTime = keepaliveTime;
+  this.maxLifetime = maxLifetime;
+  this.transactionConnections = transactionConnections;
+  this.transactionConnections
   this.logTiming = logTiming === true;
   this.encoding = encoding;
   this.logs = logs;
@@ -38,6 +53,7 @@ function Sybase({
   }
 
   this.queryCount = 0;
+  this.transactionCount = 0;
   this.currentMessages = {}; // look up msgId to message sent and call back details.
 
   this.jsonParser = chain([
@@ -130,6 +146,13 @@ function Sybase({
       this.database,
       this.username,
       this.password,
+      this.minConnections,
+      this.maxConnections,
+      this.connectionTimeout,
+      this.idleTimeout,
+      this.keepaliveTime,
+      this.maxLifetime,
+      this.transactionConnections
     ]);
 
     const handleConnection = (resolve, reject) => {
@@ -184,7 +207,15 @@ function Sybase({
     return connectCore();
   };
 
-  const prepareQuery = function (sql, callback) {
+  /**
+   * Prepares a SQL query to be executed asynchronously.
+   * @param {string} sql - The SQL query to execute.
+   * @param {number} transactionId - The transaction ID to use, defaults to -1 (no transaction).
+   * @param {boolean} finishTransaction - Whether to finish the transaction after the query is done. Defaults to false.
+   * @param {function} callback - The callback function to execute once the query is done.
+   * Returns a stringified message to be sent to the Java process.
+   */
+  const prepareQuery = function (sql, transactionId, finishTransaction = false, callback) {
     if (!this.isConnected()) {
       if (callback) callback(new Error("Database isn't connected."));
 
@@ -196,6 +227,8 @@ function Sybase({
 
     const msg = {
       msgId: this.queryCount,
+      transId: transactionId,
+      finishTrans: finishTransaction,
       sql: sql,
       sentTime: new Date().getTime(),
       callback: callback,
@@ -205,7 +238,7 @@ function Sybase({
     const strMsg = JSON.stringify(msg).replace(/[\n]/g, "\\n");
 
     this.log(
-      `this: ${this} currentMessages: ${this.currentMessages} this.queryCount: ${this.queryCount}`
+      `prepareQuery: msgId: ${msg.msgId} currentMessages: ${Object.keys(this.currentMessages).length} this.queryCount: ${this.queryCount}`
     );
 
     this.currentMessages[msg.msgId] = msg;
@@ -230,7 +263,7 @@ function Sybase({
    * });
    */
   this.query = function (sql, callback) {
-    const strMsg = prepareQuery(sql, callback);
+    const strMsg = prepareQuery(sql, -1, false, callback);
     if (strMsg === null) return;
 
     this.javaDB.stdin.write(strMsg + "\n");
@@ -241,6 +274,8 @@ function Sybase({
    * Executes a SQL query synchronously and returns the result.
    *
    * @param {string} sql - The SQL query to execute.
+   * @param {number} transactionId - The transaction ID to use, defaults to -1 (no transaction).
+   * @param {boolean} finishTransaction - Whether to finish the transaction after the query is done. Defaults to false.
    * @returns {Object} The result of the query.
    *
    * @example
@@ -252,9 +287,9 @@ function Sybase({
    *   console.error(err);
    * }
    */
-  this.querySync = function (sql) {
+  this.querySync = function (sql, transactionId = -1, finishTransaction = false) {
     return new Promise((resolve, reject) => {
-      const strMsg = prepareQuery(sql, null);
+      const strMsg = prepareQuery(sql, transactionId, finishTransaction, null);
 
       if (strMsg === null) {
         reject(new Error("Database isn't connected."));
@@ -290,9 +325,9 @@ function Sybase({
    * @example
    * async function main() {
    *   try {
-   *     const result = await sybase.transaction(async (connection) => {
-   *       const user = await connection.querySync('SELECT * FROM users WHERE id = 1');
-   *       await connection.querySync(`UPDATE users SET name = 'John' WHERE id = 1`);
+   *     const result = await sybase.transaction(async (connection, transactionId) => {
+   *       const user = await connection.querySync('SELECT * FROM users WHERE id = 1', transactionId);
+   *       await connection.querySync(`UPDATE users SET name = 'John' WHERE id = 1`, transactionId);
    *       return user;
    *     });
    *     console.log('Transaction successful, result:', result);
@@ -307,15 +342,16 @@ function Sybase({
     let result;
     let error;
 
+    const transactionId = this.transactionCount++;
     try {
-      await this.querySync("BEGIN TRANSACTION");
+      await this.querySync("BEGIN TRANSACTION", transactionId);
 
       result = await queriesFunction(this);
 
-      await this.querySync("COMMIT TRANSACTION");
+      await this.querySync("COMMIT TRANSACTION", transactionId, true);
     } catch (err) {
       error = err;
-      await this.querySync("ROLLBACK TRANSACTION");
+      await this.querySync("ROLLBACK TRANSACTION", transactionId, true);
     }
 
     if (error) {

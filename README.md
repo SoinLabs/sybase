@@ -13,7 +13,7 @@ npm install @soinlabs/sybase
 Requirements
 ------------
 
-* java 1.5+
+* java 1.8+
 
 ## Usage
 

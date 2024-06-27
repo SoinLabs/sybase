@@ -10,30 +10,42 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 /**
- *
  * @author rod
+ * modified by DarkJ24
  */
 public class ExecSQLCallable implements Callable<String> {
 
-	private Connection conn;
-	//private Gson gson;
+	private ConnectionPool pool;
 	private DateFormat df;
 	private SQLRequest request;
 
-	public ExecSQLCallable(Connection conn, DateFormat df, SQLRequest request) {
-		this.conn = conn;
+	/**
+	 * Constructor for ExecSQLCallable 
+	 * @param pool The connection pool to use for the sql request
+	 * @param df The date format to use for the sql request
+	 * @param request The SQLRequest to execute
+	 */
+	public ExecSQLCallable(ConnectionPool pool, DateFormat df, SQLRequest request) {
+		this.pool = pool;
 		this.df = df;
 		this.request = request;
-		//gson = new GsonBuilder().create();
 	}
 
+	/**
+	 * Call method to execute the transaction sql request
+	 * @return The result of the transaction sql request
+	 * @throws Exception 
+	 */
 	public String call() throws Exception {
 		String result = execSQLJsonSimple();
 		System.out.println(result);
-		//safePrintln(result);
 		return result;
 	}
 
+	/**
+	 * Execute the transaction sql request
+	 * @return The result of the transaction sql request
+	 */
 	public String execSQLJsonSimple()
 	{
 		JSONObject response = new JSONObject();
@@ -42,8 +54,10 @@ public class ExecSQLCallable implements Callable<String> {
 		response.put("result", rss);
 		Statement stmt = null;
 		ResultSet rs = null;
+		Connection conn = null;
 
 		try {
+			conn = pool.getConnection();
 			stmt = conn.createStatement();
 			boolean isRS = stmt.execute(request.sql);
 			while (isRS || (stmt.getUpdateCount() != -1))
@@ -89,22 +103,31 @@ public class ExecSQLCallable implements Callable<String> {
 							default:
 								row.put(columns[c], rs.getObject(c));
 						}
-						//System.out.println(columns[c] + ": " + dataType);
 					}
 				}
-				rs.close();
+				rs.close(); // Close the result set
 				isRS = stmt.getMoreResults();
 			}
-			stmt.close();
+			stmt.close(); // Close the statement
+            conn.close(); // Close the connection
 		} catch (Exception ex) {
 			response.put("error", ex.getMessage());
+			// Close the connection in case of an error
+            try {
+				if (conn != null) conn.close();
+			} catch (Exception ex2) {
+			    //Ignore
+		            //response.put("error", ex.getMessage());
+			}
 		} finally {
+			// Close the result set if not already closed
 			try {
 				if (rs != null) rs.close();
 			} catch (Exception ex) {
 				//Ignore
 				//response.put("error", ex.getMessage());
 			}
+			// Close the statement if not already closed
 			try {
 				if (stmt != null) stmt.close();
 			} catch (Exception ex) {
@@ -116,17 +139,17 @@ public class ExecSQLCallable implements Callable<String> {
 		response.put("javaStartTime", request.javaStartTime);
 		long beforeParse = System.currentTimeMillis();
 		response.put("javaEndTime", beforeParse);
-
 		String jsonResult = response.toJSONString();
-		//System.err.println("parse time: " + (System.currentTimeMillis() - beforeParse));
 		return jsonResult;
 	}
 
+	/**
+	 * Print the given string to stdout
+	 * @param s The string to print
+	 */
 	public void safePrintln(String s) {
 		synchronized (System.out) {
 			System.out.println(s);
 		}
 	}
-
-
 }
