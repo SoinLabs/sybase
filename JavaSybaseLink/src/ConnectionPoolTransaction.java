@@ -103,7 +103,7 @@ public class ConnectionPoolTransaction {
             if (this.availableConnections.isEmpty()) {
                 connection = createConnection(this.url, this.props);
             } else {
-                connection = this.availableConnections.removeFirst();
+                connection = this.availableConnections.remove(0);
             }
             this.transactions.put(transactionId, connection);
         }
