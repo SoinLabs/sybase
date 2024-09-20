@@ -1,8 +1,6 @@
 
 import com.sybase.jdbc4.jdbc.SybDataSource;
 import com.sybase.jdbc4.jdbc.SybDriver;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -10,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 /**
@@ -51,7 +50,7 @@ public class ConnectionPoolTransaction {
                 
         // Create the conections and add them to the pool
         List<Connection> pool = new ArrayList<>(transactionConnections);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < transactionConnections; i++) {
             pool.add(createConnection(url, props));
         }
 
@@ -63,11 +62,8 @@ public class ConnectionPoolTransaction {
      * Constructor for the ConnectionPoolTransaction
      * @param url The URL of the database
      * @param props The properties of the connection (username and password)
-     * @param connectionPool The list of connections
-     * @param minConnections The minimum number of connections in the pool
-     * @param maxConnections The maximum number of connections in the pool
-     * @param aquireTimeout The timeout to acquire a connection
-     * @param idleTimeout The timeout for an idle connection
+     * @param pool The connection pool to use at the beginning
+     * @param transactionConnections The number of connections for transactions in the pool
      */
     private ConnectionPoolTransaction(String url, Properties props, List<Connection> pool,
       int transactionConnections) {
@@ -100,13 +96,25 @@ public class ConnectionPoolTransaction {
 
         Connection connection = this.transactions.get(transactionId);
         if (connection == null) {
-            if (this.availableConnections.isEmpty()) {
+            try {
+                connection = this.availableConnections.remove(0);
+            } catch (NoSuchElementException e) {
                 connection = createConnection(this.url, this.props);
-            } else {
-                connection = this.availableConnections.removeFirst();
             }
             this.transactions.put(transactionId, connection);
         }
+        
+        //Create new Connection on another thread to feed the pool
+//        new Thread(() -> {
+//            if (this.availableConnections.size() < this.transactionConnections) {
+//                try {
+//                    this.availableConnections.add(createConnection(this.url, this.props));
+//                } catch (SQLException ex) {
+//                    //Ignore exception
+//                }
+//            }
+//        }).start();
+        
         return connection;
     }
     
@@ -142,6 +150,7 @@ public class ConnectionPoolTransaction {
                 //Ignore exception
             }
         }
+
         connection.close();
     }
     

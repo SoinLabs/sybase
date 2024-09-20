@@ -4,10 +4,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -30,7 +26,7 @@ public class SybaseDB {
 	private String dbname;
 	private String username;
 	private String password;
-    private ConnectionPool pool;
+        private ConnectionPool pool;
 	private ConnectionPoolTransaction transactionPool;
 //        private ConnectionPoolTransaction2 transactionPool;
 	private int minConnections;
@@ -91,7 +87,7 @@ public class SybaseDB {
                 }
                 ConnectionPool pool = ConnectionPool.create(this.host, this.port, this.dbname, this.username, this.password, this.minConnections, this.maxConnections, this.connectionTimeout, this.idleTimeout, this.keepaliveTime, this.maxLifetime, true);
                 ConnectionPoolTransaction transactionPool = ConnectionPoolTransaction.create(this.host, this.port, this.dbname, this.username, this.password, transactionConnections);
-//                ConnectionPoolTransaction2 transactionPool = ConnectionPoolTransaction2.create(this.host, this.port, this.dbname, this.username, this.password, this.minConnections, 10, this.acquireTimeout, this.idleTimeout, false);
+//                ConnectionPoolTransaction2 transactionPool = ConnectionPoolTransaction2.create(this.host, this.port, this.dbname, this.username, this.password, this.minConnections, 10, this.connectionTimeout, this.idleTimeout, this.keepaliveTime, this.maxLifetime, false);
                 this.pool = pool;
                 this.transactionPool = transactionPool;
 

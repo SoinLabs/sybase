@@ -109,11 +109,11 @@ public class ExecSQLCallable implements Callable<String> {
 				isRS = stmt.getMoreResults();
 			}
 			stmt.close(); // Close the statement
-            conn.close(); // Close the connection
+                        conn.close(); // Close the connection
 		} catch (Exception ex) {
 			response.put("error", ex.getMessage());
 			// Close the connection in case of an error
-            try {
+                        try {
 				if (conn != null) conn.close();
 			} catch (Exception ex2) {
 			    //Ignore
