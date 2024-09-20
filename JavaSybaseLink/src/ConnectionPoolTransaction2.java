@@ -9,7 +9,7 @@ import java.util.HashMap;
  *
  * @author DarkJ24
  */
-public class ConnectionPoolTransaction2 {
+public class ConnectionPoolTransaction2 implements ConnectionPoolTransaction {
     
     private final HikariDataSource dataSource;
     private HashMap<Integer, Connection> transactions = new HashMap<Integer, Connection>();
