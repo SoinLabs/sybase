@@ -1,10 +1,6 @@
 {
   "name": "@soinlabs/sybase",
-<<<<<<< HEAD
   "version": "1.1.2",
-=======
-  "version": "1.0.2",
->>>>>>> dde130d64cbe2d8f2a68c44629b570e126c4cb5d
   "description": "This library provides a Node.js bridge to connect to a Sybase database. It uses a Java bridge to facilitate the connection and query execution.",
   "dependencies": {
     "stream-json": "latest"
