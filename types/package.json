@@ -1,6 +1,6 @@
 {
  "dependencies": {
-    "@types/node": "^16",
+    "@types/node": "^16.18.126",
     "JSONStream": "latest"
   }
 }
