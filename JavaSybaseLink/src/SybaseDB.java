@@ -4,10 +4,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -30,9 +26,8 @@ public class SybaseDB {
 	private String dbname;
 	private String username;
 	private String password;
-    private ConnectionPool pool;
-	private ConnectionPoolTransaction transactionPool;
-//        private ConnectionPoolTransaction2 transactionPool;
+        private ConnectionPool pool;
+        private ConnectionPoolTransaction transactionPool;
 	private int minConnections;
 	private int maxConnections;
 	private int connectionTimeout;
@@ -89,11 +84,10 @@ public class SybaseDB {
                 for (Handler h : rootLogger.getHandlers()) {
                     h.setLevel(Level.SEVERE);
                 }
-                ConnectionPool pool = ConnectionPool.create(this.host, this.port, this.dbname, this.username, this.password, this.minConnections, this.maxConnections, this.connectionTimeout, this.idleTimeout, this.keepaliveTime, this.maxLifetime, true);
-                ConnectionPoolTransaction transactionPool = ConnectionPoolTransaction.create(this.host, this.port, this.dbname, this.username, this.password, transactionConnections);
-//                ConnectionPoolTransaction2 transactionPool = ConnectionPoolTransaction2.create(this.host, this.port, this.dbname, this.username, this.password, this.minConnections, 10, this.acquireTimeout, this.idleTimeout, false);
-                this.pool = pool;
-                this.transactionPool = transactionPool;
+                this.pool = ConnectionPool.create(this.host, this.port, this.dbname, this.username, this.password, this.minConnections, this.maxConnections, this.connectionTimeout, this.idleTimeout, this.keepaliveTime, this.maxLifetime, true);
+//                this.transactionPool = ConnectionPoolTransaction1.create(this.host, this.port, this.dbname, this.username, this.password, transactionConnections);
+                this.transactionPool = ConnectionPoolTransaction2.create(this.host, this.port, this.dbname, this.username, this.password, this.minConnections, transactionConnections, this.connectionTimeout, this.idleTimeout, this.keepaliveTime, this.maxLifetime, false);
+//                this.transactionPool = ConnectionPoolTransaction3.create(this.host, this.port, this.dbname, this.username, this.password, transactionConnections);
 
                 //Atach shutdown hook to close the connection
                 Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -129,11 +123,17 @@ public class SybaseDB {
 	public void disconnect()
 	{
 		try {
-			this.pool.shutdown();
-		} catch (Exception ex) {
-			System.err.println(ex);
-			System.err.println(ex.getMessage());
-		}
+                        pool.shutdown();
+                } catch (Exception ex) {
+                        System.err.println(ex);
+                        System.err.println(ex.getMessage());
+                }
+                try {
+                        transactionPool.shutdown();
+                } catch (Exception ex) {
+                        System.err.println(ex);
+                        System.err.println(ex.getMessage());
+                }
 	}
 
 	/**

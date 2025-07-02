@@ -8,8 +8,6 @@ import java.util.concurrent.Callable;
 import java.text.DateFormat;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import java.util.concurrent.Future;
-import java.util.List;
 
 /**
  *
@@ -61,9 +59,9 @@ public class ExecSQLTransactionCallable implements Callable<String> {
                 
 		try {
 			conn = this.pool.getConnection(request.transId);
-                        if (conn == null && conn.isClosed()) {
+                        if (conn.isClosed()) {
                                 // The connection is closed or null, return an error message to stdout (Node.js receives this error message from stdout)
-                                response.put("error", "Connection for query in transaction is closed!");
+                                throw new Exception("Connection for query in transaction is closed!");
                         }
                         stmt = conn.createStatement();
                         boolean isRS = stmt.execute(request.sql);
