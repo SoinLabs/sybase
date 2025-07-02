@@ -296,8 +296,15 @@ function Sybase({
         return;
       }
 
+      let strMsgId = this.queryCount;
+        try {
+          const strMsgObj = JSON.parse(strMsg);
+          strMsgId = strMsgObj.msgId;
+        } catch (_) {
+      }
+
       const onResponse = (jsonMsg) => {
-        if (jsonMsg.msgId === this.queryCount) {
+        if (jsonMsg.msgId === strMsgId) {
           this.jsonParser.removeListener("data", onResponse);
           if (jsonMsg.error !== undefined) reject(new Error(jsonMsg.error));
           else resolve(jsonMsg.result);
