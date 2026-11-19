@@ -139,6 +139,8 @@ function Sybase({
 
   const connectCore = function (callback) {
     this.javaDB = spawn("java", [
+      // En Windows Java escribe por stdout con Cp1252 y Node lo lee como UTF-8 (los acentos se rompen).
+      ...(process.platform === "win32" ? ["-Dstdout.encoding=UTF-8"] : []),
       "-jar",
       this.pathToJavaBridge,
       this.host,
@@ -296,8 +298,15 @@ function Sybase({
         return;
       }
 
+      let strMsgId = this.queryCount;
+        try {
+          const strMsgObj = JSON.parse(strMsg);
+          strMsgId = strMsgObj.msgId;
+        } catch (_) {
+      }
+
       const onResponse = (jsonMsg) => {
-        if (jsonMsg.msgId === this.queryCount) {
+        if (jsonMsg.msgId === strMsgId) {
           this.jsonParser.removeListener("data", onResponse);
           if (jsonMsg.error !== undefined) reject(new Error(jsonMsg.error));
           else resolve(jsonMsg.result);
