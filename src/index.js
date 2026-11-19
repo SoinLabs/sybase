@@ -139,6 +139,8 @@ function Sybase({
 
   const connectCore = function (callback) {
     this.javaDB = spawn("java", [
+      // En Windows Java escribe por stdout con Cp1252 y Node lo lee como UTF-8 (los acentos se rompen).
+      ...(process.platform === "win32" ? ["-Dstdout.encoding=UTF-8"] : []),
       "-jar",
       this.pathToJavaBridge,
       this.host,
